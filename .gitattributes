@@ -1,0 +1,24 @@
+# 统一换行符,避免 Windows / Linux 协作者之间产生无意义的整文件 diff
+* text=auto eol=lf
+
+# 让 git 正确识别语言、统计与 diff
+*.cs      text diff=csharp
+*.asmdef  text
+*.json    text
+*.md      text
+
+# 二进制资源不做换行符转换
+*.png          binary
+*.jpg          binary
+*.jpeg         binary
+*.tga          binary
+*.psd          binary
+*.tif          binary
+*.exr          binary
+*.fbx          binary
+*.obj          binary
+*.blend        binary
+*.dll          binary
+*.zip          binary
+*.unitypackage binary
+*.asset        binary

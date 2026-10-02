@@ -1,0 +1,31 @@
+{
+    "name": "SereinFish.CatTools.Editor",
+    "rootNamespace": "SereinFish.CatTools.Editor",
+    "references": [
+        "SereinFish.CatTools.Runtime",
+        "nadena.dev.ndmf",
+        "nadena.dev.ndmf.runtime"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": [
+        {
+            "name": "com.vrchat.avatars",
+            "expression": "",
+            "define": "CATTOLS_VRCSDK3_AVATARS"
+        },
+        {
+            "name": "nadena.dev.modular-avatar",
+            "expression": "",
+            "define": "CATTOLS_MODULAR_AVATAR"
+        }
+    ],
+    "noEngineReferences": false
+}

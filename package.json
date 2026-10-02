@@ -1,0 +1,16 @@
+{
+  "name": "sereinfish.cat.tools",
+  "displayName": "CatTools 工具箱",
+  "version": "0.1.0",
+  "unity": "2022.3",
+  "description": "基于 NDMF(Non-Destructive Modular Framework)的 VRChat Avatar 非破坏性工具箱。以组件化方式装配 Avatar,所有改动在构建期由 NDMF 管线应用,不会污染原始模型。",
+  "author": {
+    "name": "SereinFish"
+  },
+  "vrchatVersion": "2022.1.1",
+  "license": "GPL-3.0-or-later",
+  "dependencies": {},
+  "vpmDependencies": {
+    "nadena.dev.ndmf": ">=1.14.8 <2.0.0-a"
+  }
+}
