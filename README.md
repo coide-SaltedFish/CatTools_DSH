@@ -6,7 +6,7 @@ CatTools 以「组件」为工作单位:你在 Avatar 上挂一个 CatTools 组�
 真正的改动由 NDMF 在构建期(上传 Avatar、或进入 Play 模式预览时)统一应用。
 原始模型、prefab、材质不会被修改,组件的效果可以随时增删、叠加与回退。
 
-> **当前状态:框架骨架。** 插件管线、程序集、扩展点已就绪,具体功能组件尚未开始编写。
+> **当前状态:v0.1.0 开发中。** 插件管线与程序集骨架已就绪,第一个功能组件「重定向对象」已可用。
 
 ## 环境要求
 
@@ -14,7 +14,7 @@ CatTools 以「组件」为工作单位:你在 Avatar 上挂一个 CatTools 组�
 | --- | --- |
 | Unity | 2022.3.22f1(VRChat 官方推荐的 Avatar 开发版本) |
 | VRChat SDK | SDK 3.0 Avatars |
-| NDMF | `nadena.dev.ndmf` ≥ 1.14.8,< 2.0.0 |
+| NDMF | `nadena.dev.ndmf` ≥ 1.13.1,< 2.0.0 |
 
 对 NDMF 的依赖已写在 `package.json` 的 `vpmDependencies` 中,通过 VPM 安装时会自动一并装上。
 
@@ -32,7 +32,9 @@ CatTools/
 │   ├── AssemblyInfo.cs
 │   ├── CatToolsConstants.cs              插件限定名、显示名、菜单根路径
 │   └── Components/
-│       └── CatToolsComponent.cs          所有 CatTools 组件的抽象基类
+│       ├── CatToolsComponent.cs          所有 CatTools 组件的抽象基类
+│       ├── CatToolsPathUtils.cs          目标路径的规范化与解析
+│       └── CatRedirect.cs                重定向对象组件
 └── Editor/                               ── 只在编辑器里存在的那一半
     ├── SereinFish.CatTools.Editor.asmdef
     ├── CatToolsPlugin.cs                 NDMF 插件入口,在这里接管线
@@ -40,9 +42,11 @@ CatTools/
     │   ├── CatToolsPass.cs               功能 Pass 的基类
     │   ├── CatToolsComponentRegistry.cs  一次构建的组件清单
     │   ├── CollectComponentsPass.cs      Resolving 阶段:建立清单
+    │   ├── CatRedirectPass.cs            Transforming 阶段:重定向对象
     │   └── CleanupComponentsPass.cs      PlatformFinish 阶段:清除组件
     └── Inspectors/
-        └── CatToolsComponentEditor.cs    组件 Inspector 的基类
+        ├── CatToolsComponentEditor.cs    组件 Inspector 的基类
+        └── CatRedirectEditor.cs          重定向组件的 Inspector
 ```
 
 **为什么分成两个程序集:** `Runtime` 里的组件是纯数据,只引用 NDMF 的 **runtime** 程序集
@@ -98,12 +102,38 @@ runtime 程序集引用它会直接编译失败。
 同一阶段内多次调用 `InPhase` 会按声明顺序串行执行。需要和其他插件排序时用
 `.Run(...).BeforePlugin("对方的插件限定名")`。
 
-目前 CatTools 在这两个阶段挂了 Pass:
+目前 CatTools 在这些阶段挂了 Pass:
 
 - `Resolving` → `CollectComponentsPass`:遍历一次层级,把结果存进
   `CatToolsComponentRegistry`,后续 Pass 通过 `CatToolsComponentRegistry.Get(context)` 取用。
+- `Transforming` → `CatRedirectPass`:应用「重定向对象」组件。
 - `PlatformFinish` → `CleanupComponentsPass`:销毁所有 `CatToolsComponent`,
   避免它们出现在上传的 Avatar 上变成「缺失脚本」。
+
+## 已有组件
+
+### 重定向对象(CatRedirect)
+
+菜单:`Add Component → CatTools → 重定向 → 重定向对象`。
+
+在构建期把**组件所在对象及其全部子对象**移动到指定位置。移动等价于更换父对象,
+所以子对象会整体被带走;默认保持世界位置、旋转、缩放,外观不变,只是层级归属变了。
+
+| 字段 | 说明 |
+| --- | --- |
+| 目标路径 | 相对 **Avatar 最上层对象**的路径,如 `Armature/Hips/Spine`;留空表示 Avatar 根对象 |
+| 保持世界变换 | 勾选(默认):只改层级归属;取消:保留局部变换值,按新父级坐标系重新定位 |
+
+路径可以从层级窗口**直接拖拽**到路径框上,也可以手敲。Inspector 会实时校验路径,
+并在目标(或它的祖先)上也有重定向组件时,显示对象最终会被带到的位置。
+
+行为要点:
+
+- **子先父后,并重复多轮直到稳定。** 构建期每一轮按「源对象深度从深到浅」处理:
+  先把该搬出去的内容搬出去,再让父对象带着整棵子树移动。因为一次移动会改变其他组件的
+  目标位置,所以会重复若干轮直到层级不再变化(轮数上限为「组件数 + 2」)。
+- **目标链会一并处理。** A 指向 B、B 又指向 C 时,把组件挂在 A 上,最终会落到 C 下。
+- **错误会阻止上传。** 路径找不到、路径含 `..`、目标落在自身子树内,都会在构建报告里报错。
 
 ## 如何新增一个功能组件
 

@@ -49,6 +49,11 @@ namespace SereinFish.CatTools.Editor
             // 同一个阶段内多次调用 InPhase 会按声明顺序串行执行;
             // 需要跨插件排序时,用 .Run(...).BeforePlugin("别的插件限定名")。
 
+            // Transforming:重定向对象。放在通用变换阶段,让下游插件(Modular Avatar 等)
+            // 看到的是移动之后的结构;对象引用本身不会失效,只有层级路径会变。
+            InPhase(BuildPhase.Transforming)
+                .Run(CatRedirectPass.Instance);
+
             // PlatformFinish:收尾之前清掉所有 CatTools 组件,
             // 保证它们不会进入最终上传的 Avatar。
             InPhase(BuildPhase.PlatformFinish)
