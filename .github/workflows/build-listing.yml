@@ -52,20 +52,28 @@ jobs:
             ~/.nuget/packages
           key: ${{ runner.os }}-${{ hashFiles('**/global.json', '**/*.csproj') }}
 
-      # 先把站点资源铺进发布目录。
-      # 注意:官方 action 在服务器构建下只写 index.json / index.html / app.js,
-      # 不会拷贝 banner.png / styles.css / favicon.ico,所以要自己来。
-      - name: Seed Listing Website
-        run: |
-          rm -rf "${{ env.listPublishDirectory }}"
-          mkdir -p "${{ env.listPublishDirectory }}"
-          cp -r WebsiteStatic/. "${{ env.listPublishDirectory }}/"
-
-      # 生成 index.json 并渲染 index.html / app.js
+      # 生成 index.json,并把站点模板渲染进发布目录。
+      #
+      # 关键:官方 action 在服务器构建下**只写** index.json / index.html / app.js,
+      # 不会拷贝 banner.png / styles.css 等静态资源,而它的模板目录与发布目录
+      # 是同一个目录,所以不能把模板直接放在发布目录里。这里显式把模板目录
+      # 指向 WebsiteStatic/,渲染结果统一落到 Website/。
       - name: Build Package Version Listing
-        run: ${{ env.pathToCi }}/build.cmd BuildRepoListing --root ${{ env.pathToCi }} --list-publish-directory $GITHUB_WORKSPACE/${{ env.listPublishDirectory }} --current-package-name sereinfish.cat.tools
+        run: >
+          ${{ env.pathToCi }}/build.cmd BuildRepoListing
+          --root ${{ env.pathToCi }}
+          --list-publish-directory $GITHUB_WORKSPACE/${{ env.listPublishDirectory }}
+          --package-listing-source-folder $GITHUB_WORKSPACE
+          --current-package-name sereinfish.cat.tools
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # 发布前把静态资源补进发布目录(action 只写那三个文件)
+      - name: Copy Static Assets Into Publish Directory
+        run: |
+          for f in banner.png favicon.ico styles.css; do
+            if [ -f "WebsiteStatic/$f" ]; then cp "WebsiteStatic/$f" "${{ env.listPublishDirectory }}/$f"; fi
+          done
 
       # 部署前把生成结果打出来,便于排查
       - name: Show Generated Listing
