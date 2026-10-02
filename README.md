@@ -61,7 +61,21 @@ runtime 程序集引用它会直接编译失败。
 
 ## 安装
 
-### 方式一:作为本地包引入(开发时推荐)
+### 方式一:通过 VPM 安装(普通用户推荐)
+
+在 VRChat Creator Companion(VCC)里打开 **Settings → Packages → Add Repo**,
+填入本包的 VPM 仓库地址:
+
+```
+https://coide-SaltedFish.github.io/CatTools_DSH/index.json
+```
+
+添加后 CatTools 工具箱会出现在包列表里,直接 Install 即可;
+`package.json` 里声明的 NDMF 依赖(VPM 的 `vpmDependencies`)会一并装上。
+
+> 也可以把上面这个地址粘进 VCC 的 **Add Repo** 弹窗的输入框,效果相同。
+
+### 方式二:作为本地包引入(开发时推荐)
 
 在 Unity 工程的 `Packages/manifest.json` 里加一行,路径按实际情况调整:
 
@@ -76,14 +90,15 @@ runtime 程序集引用它会直接编译失败。
 也可以走菜单 **Window → Package Manager → + → Add package from disk…**,选择本仓库的 `package.json`。
 之后改动本仓库的代码会立刻反映到工程里。
 
-### 方式二:直接放进工程的 Packages 目录
+### 方式三:直接放进工程的 Packages 目录
 
 把整个仓库复制成 `<你的工程>/Packages/sereinfish.cat.tools/`。
 
-### 方式三:通过 VPM 安装
-
-等本包发布到 VPM 仓库后,在 VRChat Creator Companion 里添加该仓库即可。
-`package.json` 中的 `url` / `repo` 字段目前留空,发布前需要补上。
+> ⚠️ **本包与上一代 CatTools 是两套并行的包。**
+> 上一代的包 id 是 `io.github.sereinfish.cat.tools`,仓库地址是
+> `https://coide-SaltedFish.github.io/CatTools/index.json`;
+> 本包的包 id 是 `sereinfish.cat.tools`。两者 id 不同,VCC 会视为两个独立包。
+> 请确认你要装的是哪一个,不要把两个仓库地址搞混。
 
 ## 核心概念
 

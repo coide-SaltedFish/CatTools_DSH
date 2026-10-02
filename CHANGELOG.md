@@ -37,6 +37,20 @@
   NDMF 1.13.1 + VRChat SDK 3.10.4 环境下**实际编译通过**,确认所用 API 在该版本已存在。
 - README 里 NDMF 的版本要求同步改为 ≥ 1.13.1。
 
+### 新增(发布与分发)
+
+- **VPM 仓库列表**:`https://coide-SaltedFish.github.io/CatTools_DSH/index.json`。
+  在 VCC 里 Add Repo 填入该地址即可安装/更新本包。
+- 源码仓库迁至 `https://github.com/coide-SaltedFish/CatTools_DSH`(原 `origin` 指向的
+  本地 bare 仓库 `CatTools_DSH.git` 不再作为推送目标)。
+- `.github/workflows/release.yml`:读 `package.json` 版本 → 打 tag →
+  用 `git archive` 出 VPM zip(靠 `.gitattributes` 的 `export-ignore` 排除仓库文件)→
+  出 `.unitypackage` → 发 GitHub Release。
+- `.github/workflows/build-listing.yml`:调用官方 `vrchat-community/package-list-action`
+  生成 `index.json` 并部署 GitHub Pages。
+- `VpmListing/source.json` 与 `VpmListing/Website/`:listing 元数据与站点模板资源。
+- 详细流程、目录约定与踩坑记录见 `AGENTS.md` §13。
+
 ### 新增(框架)
 
 - VPM/UPM 包结构:仓库根目录即包根目录,含 `package.json`(包名 `sereinfish.cat.tools`)。
