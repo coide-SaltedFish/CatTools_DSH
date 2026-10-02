@@ -59,25 +59,30 @@ jobs:
 
       # 生成 index.json,并把站点模板渲染进发布目录。
       #
-      # 关键:官方 action 在服务器构建下**只写** index.json / index.html / app.js,
-      # 不会拷贝 banner.png / styles.css 等静态资源,而它的模板目录与发布目录
-      # 都取自 --package-listing-source-folder,所以模板不能放在发布目录里。
-      # 这里把模板目录指向 WebsiteStatic/,渲染结果统一落到 Website/。
+      # 官方 action 的三个相关路径(见 package-list-action 的 Build.cs):
+      #   PackageListingSourcePath = <sourceFolder>/source.json
+      #   WebPageSourcePath        = <sourceFolder>/Website     (读 index.html / app.js 模板)
+      #   ListPublishDirectory     = --list-publish-directory   (写 index.json / index.html / app.js)
+      # 模板目录与发布目录必须是两个不同目录,否则会自我覆盖。
+      # 因此把 source.json 与模板一起放在 WebsiteStatic/ 下,渲染结果写到 Website/。
       - name: Build Package Version Listing
         run: >
           ${{ env.pathToCi }}/build.cmd BuildRepoListing
           --root ${{ env.pathToCi }}
           --list-publish-directory $GITHUB_WORKSPACE/${{ env.listPublishDirectory }}
-          --package-listing-source-folder $GITHUB_WORKSPACE
+          --package-listing-source-folder $GITHUB_WORKSPACE/WebsiteStatic
           --current-package-name sereinfish.cat.tools
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      # 发布前把静态资源补进发布目录(action 只写那三个文件)
+      # 发布前把静态资源补进发布目录(server 构建下 action 只写那三个文件,
+      # 只有本地构建才会整目录拷贝)
       - name: Copy Static Assets Into Publish Directory
         run: |
           for f in banner.png favicon.ico styles.css; do
-            if [ -f "WebsiteStatic/$f" ]; then cp "WebsiteStatic/$f" "${{ env.listPublishDirectory }}/$f"; fi
+            if [ -f "WebsiteStatic/Website/$f" ]; then
+              cp "WebsiteStatic/Website/$f" "${{ env.listPublishDirectory }}/$f"
+            fi
           done
 
       # 部署前把生成结果打出来,便于排查

@@ -43,3 +43,11 @@ desktop.ini
 
 # GitHub Pages 构建产物(由 build-listing.yml 生成,不入库)
 Website/
+
+# 本地部署排查日志与 Actions API 临时响应
+listing-log/
+listing-run.zip
+wf-runs.json
+run-*.json
+jobs-*.json
+dispatch.json
