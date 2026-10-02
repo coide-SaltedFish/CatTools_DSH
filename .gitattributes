@@ -29,7 +29,7 @@
 # 因此发布包里只有 Unity 包本体,不含仓库 / CI 相关文件。
 # ---------------------------------------------------------------------------
 .github/            export-ignore
-WebsiteStatic/      export-ignore
+VpmListing/         export-ignore
 docs~/              export-ignore
 .dsh-acl-recovery/  export-ignore
 AGENTS.md           export-ignore

@@ -64,13 +64,14 @@ jobs:
       #   WebPageSourcePath        = <sourceFolder>/Website     (读 index.html / app.js 模板)
       #   ListPublishDirectory     = --list-publish-directory   (写 index.json / index.html / app.js)
       # 模板目录与发布目录必须是两个不同目录,否则会自我覆盖。
-      # 因此把 source.json 与模板一起放在 WebsiteStatic/ 下,渲染结果写到 Website/。
+      # 因此把 source.json 与 Website/ 模板一起放在 VpmListing/ 下,
+      # 渲染结果写到根目录的 Website/。
       - name: Build Package Version Listing
         run: >
           ${{ env.pathToCi }}/build.cmd BuildRepoListing
           --root ${{ env.pathToCi }}
           --list-publish-directory $GITHUB_WORKSPACE/${{ env.listPublishDirectory }}
-          --package-listing-source-folder $GITHUB_WORKSPACE/WebsiteStatic
+          --package-listing-source-folder $GITHUB_WORKSPACE/VpmListing
           --current-package-name sereinfish.cat.tools
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -80,8 +81,8 @@ jobs:
       - name: Copy Static Assets Into Publish Directory
         run: |
           for f in banner.png favicon.ico styles.css; do
-            if [ -f "WebsiteStatic/Website/$f" ]; then
-              cp "WebsiteStatic/Website/$f" "${{ env.listPublishDirectory }}/$f"
+            if [ -f "VpmListing/Website/$f" ]; then
+              cp "VpmListing/Website/$f" "${{ env.listPublishDirectory }}/$f"
             fi
           done
 
