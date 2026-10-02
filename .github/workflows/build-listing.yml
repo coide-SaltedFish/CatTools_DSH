@@ -52,12 +52,17 @@ jobs:
             ~/.nuget/packages
           key: ${{ runner.os }}-${{ hashFiles('**/global.json', '**/*.csproj') }}
 
+      # action 在服务器构建下不会创建发布目录(它只在本地构建时清理/复制),
+      # 所以这里必须先建好,否则写 index.json 时会 DirectoryNotFoundException。
+      - name: Create Publish Directory
+        run: mkdir -p "${{ env.listPublishDirectory }}"
+
       # 生成 index.json,并把站点模板渲染进发布目录。
       #
       # 关键:官方 action 在服务器构建下**只写** index.json / index.html / app.js,
       # 不会拷贝 banner.png / styles.css 等静态资源,而它的模板目录与发布目录
-      # 是同一个目录,所以不能把模板直接放在发布目录里。这里显式把模板目录
-      # 指向 WebsiteStatic/,渲染结果统一落到 Website/。
+      # 都取自 --package-listing-source-folder,所以模板不能放在发布目录里。
+      # 这里把模板目录指向 WebsiteStatic/,渲染结果统一落到 Website/。
       - name: Build Package Version Listing
         run: >
           ${{ env.pathToCi }}/build.cmd BuildRepoListing
