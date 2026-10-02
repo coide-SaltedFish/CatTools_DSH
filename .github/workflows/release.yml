@@ -38,7 +38,7 @@ jobs:
 
       # 生成 VPM 发布 zip
       # 用 git archive 而非 zip -r:仓库根目录就是包根目录,
-      # 直接递归压缩会把 .github / Website / AGENTS.md 等一并打进去,
+      # 直接递归压缩会把 .github / VpmListing 等一并打进去,
       # 而 .gitattributes 里的 export-ignore 正好把这些排除掉。
       - name: Create Package Zip
         run: |
