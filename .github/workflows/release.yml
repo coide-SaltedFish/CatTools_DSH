@@ -28,7 +28,7 @@ jobs:
           file_path: "package.json"
           prop_path: "version"
 
-      # 打 tag(若由 tag 触发则已存在,此步会跳过报错)
+      # 打 tag(若本次由 tag 触发则已存在,这步会跳过)
       - name: Create Tag
         id: tag_version
         uses: rickstaa/action-create-tag@88dbf7ff6fe2405f8e8f6c6fdfd78829bc631f83
@@ -36,10 +36,7 @@ jobs:
         with:
           tag: "${{ steps.version.outputs.value }}"
 
-      # 生成 VPM 发布 zip
-      # 用 git archive 而非 zip -r:仓库根目录就是包根目录,
-      # 直接递归压缩会把 .github / VpmListing 等一并打进去,
-      # 而 .gitattributes 里的 export-ignore 正好把这些排除掉。
+      # 出发布 zip:用 git archive,靠 .gitattributes 的 export-ignore 排除仓库 / CI 文件
       - name: Create Package Zip
         run: |
           git archive --format=zip -o "sereinfish.cat.tools-${{ steps.version.outputs.value }}.zip" HEAD
@@ -48,14 +45,14 @@ jobs:
       - name: Track Package Meta Files
         run: find . -name \*.meta -not -path "./Website/*" -not -path "./.github/*" > metaList
 
-      # 生成 .unitypackage(方便手动导入的用户)
+      # 出 .unitypackage,方便手动导入的用户
       - name: Create UnityPackage
         uses: pCYSl5EDgo/create-unitypackage@v1.2.3
         with:
           package-path: "sereinfish.cat.tools-${{ steps.version.outputs.value }}.unitypackage"
           include-files: metaList
 
-      # 发布到 GitHub Releases;build-listing.yml 会在此之后重建 listing
+      # 发布到 GitHub Releases;之后 build-listing.yml 会重建 listing
       - name: Make Release
         uses: softprops/action-gh-release@de2c0eb89ae2a093876385947365aca7b0e5f844
         with:

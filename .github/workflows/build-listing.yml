@@ -12,13 +12,12 @@ on:
   release:
     types: [published, created, edited, unpublished, deleted, released]
 
-# 允许部署到 GitHub Pages 所需的最小权限
+# 部署到 GitHub Pages 所需的最小权限
 permissions:
   contents: read
   pages: write
   id-token: write
 
-# 同一时间只允许一次 Pages 部署
 concurrency:
   group: pages
   cancel-in-progress: true
@@ -31,11 +30,10 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      # 取出本仓库(包本体 + Website 站点资源模板)
       - name: Checkout Local Repository
         uses: actions/checkout@v4
 
-      # 取出官方 listing 生成器(不清理前面的 checkout)
+      # 官方 listing 生成器;clean: false 以免清掉上面的 checkout
       - name: Checkout Automation Repository
         uses: actions/checkout@v4
         with:
@@ -43,7 +41,6 @@ jobs:
           path: ${{ env.pathToCi }}
           clean: false
 
-      # 构建 listing 需要 NuGet 缓存
       - name: Restore Cache
         uses: actions/cache@v4
         with:
@@ -52,20 +49,11 @@ jobs:
             ~/.nuget/packages
           key: ${{ runner.os }}-${{ hashFiles('**/global.json', '**/*.csproj') }}
 
-      # action 在服务器构建下不会创建发布目录(它只在本地构建时清理/复制),
-      # 所以这里必须先建好,否则写 index.json 时会 DirectoryNotFoundException。
+      # 官方 action 在服务器构建下不会自建发布目录,必须先 mkdir,否则写 index.json 会失败
       - name: Create Publish Directory
         run: mkdir -p "${{ env.listPublishDirectory }}"
 
-      # 生成 index.json,并把站点模板渲染进发布目录。
-      #
-      # 官方 action 的三个相关路径(见 package-list-action 的 Build.cs):
-      #   PackageListingSourcePath = <sourceFolder>/source.json
-      #   WebPageSourcePath        = <sourceFolder>/Website     (读 index.html / app.js 模板)
-      #   ListPublishDirectory     = --list-publish-directory   (写 index.json / index.html / app.js)
-      # 模板目录与发布目录必须是两个不同目录,否则会自我覆盖。
-      # 因此把 source.json 与 Website/ 模板一起放在 VpmListing/ 下,
-      # 渲染结果写到根目录的 Website/。
+      # 读 VpmListing/Website 下的模板,渲染进发布目录并生成 index.json
       - name: Build Package Version Listing
         run: >
           ${{ env.pathToCi }}/build.cmd BuildRepoListing
@@ -76,8 +64,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      # 发布前把静态资源补进发布目录(server 构建下 action 只写那三个文件,
-      # 只有本地构建才会整目录拷贝)
+      # 静态资源要自己拷:服务器构建下 action 只写 index.json / index.html / app.js
       - name: Copy Static Assets Into Publish Directory
         run: |
           for f in banner.png favicon.ico styles.css; do
@@ -86,7 +73,7 @@ jobs:
             fi
           done
 
-      # 部署前把生成结果打出来,便于排查
+      # 部署前打印生成结果,便于排查
       - name: Show Generated Listing
         run: |
           echo "--- ${{ env.listPublishDirectory }} ---"

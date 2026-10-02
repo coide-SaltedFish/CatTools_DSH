@@ -18,46 +18,6 @@ CatTools 以「组件」为工作单位:你在 Avatar 上挂一个 CatTools 组�
 
 对 NDMF 的依赖已写在 `package.json` 的 `vpmDependencies` 中,通过 VPM 安装时会自动一并装上。
 
-## 目录结构
-
-```
-CatTools/
-├── package.json                          VPM/UPM 包清单(仓库根目录即包根目录)
-├── README.md
-├── CHANGELOG.md
-├── LICENSE.md
-├── Runtime/                              ── 随 Avatar 一起存在的那一半
-│   ├── SereinFish.CatTools.Runtime.asmdef
-│   ├── AssemblyInfo.cs
-│   ├── CatToolsConstants.cs              插件限定名、显示名、菜单根路径
-│   └── Components/
-│       ├── CatToolsComponent.cs          所有 CatTools 组件的抽象基类
-│       ├── CatToolsPathUtils.cs          目标路径的规范化与解析
-│       └── CatRedirect.cs                重定向对象组件
-└── Editor/                               ── 只在编辑器里存在的那一半
-    ├── SereinFish.CatTools.Editor.asmdef
-    ├── CatToolsPlugin.cs                 NDMF 插件入口,在这里接管线
-    ├── Passes/
-    │   ├── CatToolsPass.cs               功能 Pass 的基类
-    │   ├── CatToolsComponentRegistry.cs  一次构建的组件清单
-    │   ├── CollectComponentsPass.cs      Resolving 阶段:建立清单
-    │   ├── CatRedirectPass.cs            Transforming 阶段:重定向对象
-    │   └── CleanupComponentsPass.cs      PlatformFinish 阶段:清除组件
-    └── Inspectors/
-        ├── CatToolsComponentEditor.cs    组件 Inspector 的基类
-        └── CatRedirectEditor.cs          重定向组件的 Inspector
-```
-
-**为什么分成两个程序集:** `Runtime` 里的组件是纯数据,只引用 NDMF 的 **runtime** 程序集
-(为了拿到 `INDMFEditorOnly`,它在没有 VRChat SDK 的工程里会退化成一个空接口),
-绝不引用 `nadena.dev.ndmf` 主程序集或 `UnityEditor` —— 后者是 Editor 平台限定的,
-runtime 程序集引用它会直接编译失败。
-所有构建逻辑集中在 `Editor`,并 `includePlatforms: ["Editor"]`,不会被打进最终产物。
-
-`CatToolsComponent` 实现了 `INDMFEditorOnly`,这是向 NDMF 与 VRChat SDK 声明
-「本组件只在编辑器里有意义」的标准做法(Modular Avatar 的 `AvatarTagComponent` 同理),
-保证它不会被上传到 VRChat。此外 `CleanupComponentsPass` 还会在收尾阶段主动删掉它们。
-
 ## 安装
 
 ### 方式一:通过 VPM 安装(普通用户推荐)
@@ -113,16 +73,7 @@ https://coide-SaltedFish.github.io/CatTools_DSH/index.json
 | `Optimizing` | 纯粹的性能优化,需要跑得很晚 |
 | `PlatformFinish` | 平台相关的收尾与校验 |
 
-同一阶段内多次调用 `InPhase` 会按声明顺序串行执行。需要和其他插件排序时用
-`.Run(...).BeforePlugin("对方的插件限定名")`。
-
-目前 CatTools 在这些阶段挂了 Pass:
-
-- `Resolving` → `CollectComponentsPass`:遍历一次层级,把结果存进
-  `CatToolsComponentRegistry`,后续 Pass 通过 `CatToolsComponentRegistry.Get(context)` 取用。
-- `Transforming` → `CatRedirectPass`:应用「重定向对象」组件。
-- `PlatformFinish` → `CleanupComponentsPass`:销毁所有 `CatToolsComponent`,
-  避免它们出现在上传的 Avatar 上变成「缺失脚本」。
+重定向对象在 `Transforming` 阶段生效,因此下游插件(例如 Modular Avatar)看到的是移动之后的结构。
 
 ## 已有组件
 
