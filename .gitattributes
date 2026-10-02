@@ -22,3 +22,18 @@
 *.zip          binary
 *.unitypackage binary
 *.asset        binary
+
+# ---------------------------------------------------------------------------
+# git archive 导出规则(VPM 发布 zip 用)
+# 带 export-ignore 的路径不会进入 `git archive` 产出的压缩包,
+# 因此发布包里只有 Unity 包本体,不含仓库 / CI 相关文件。
+# ---------------------------------------------------------------------------
+.github/            export-ignore
+WebsiteStatic/      export-ignore
+source.json         export-ignore
+docs~/              export-ignore
+.dsh-acl-recovery/  export-ignore
+AGENTS.md           export-ignore
+AGENTS.md.meta      export-ignore
+.gitignore          export-ignore
+.gitattributes      export-ignore

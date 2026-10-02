@@ -40,3 +40,6 @@ desktop.ini
 
 # DSH sandbox permission-repair reports (local only)
 .dsh-acl-recovery/
+
+# GitHub Pages 构建产物(由 build-listing.yml 生成,不入库)
+Website/

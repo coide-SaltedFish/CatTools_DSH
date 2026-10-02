@@ -1,0 +1,88 @@
+name: Build Repo Listing
+
+env:
+  listPublishDirectory: Website
+  pathToCi: ci
+
+on:
+  workflow_dispatch:
+  workflow_run:
+    workflows: [Build Release]
+    types: [completed]
+  release:
+    types: [published, created, edited, unpublished, deleted, released]
+
+# 允许部署到 GitHub Pages 所需的最小权限
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# 同一时间只允许一次 Pages 部署
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build-listing:
+    name: build-listing
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      # 取出本仓库(包本体 + Website 站点资源模板)
+      - name: Checkout Local Repository
+        uses: actions/checkout@v4
+
+      # 取出官方 listing 生成器(不清理前面的 checkout)
+      - name: Checkout Automation Repository
+        uses: actions/checkout@v4
+        with:
+          repository: vrchat-community/package-list-action
+          path: ${{ env.pathToCi }}
+          clean: false
+
+      # 构建 listing 需要 NuGet 缓存
+      - name: Restore Cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ${{ env.pathToCi }}/.nuke/temp
+            ~/.nuget/packages
+          key: ${{ runner.os }}-${{ hashFiles('**/global.json', '**/*.csproj') }}
+
+      # 先把站点资源铺进发布目录。
+      # 注意:官方 action 在服务器构建下只写 index.json / index.html / app.js,
+      # 不会拷贝 banner.png / styles.css / favicon.ico,所以要自己来。
+      - name: Seed Listing Website
+        run: |
+          rm -rf "${{ env.listPublishDirectory }}"
+          mkdir -p "${{ env.listPublishDirectory }}"
+          cp -r WebsiteStatic/. "${{ env.listPublishDirectory }}/"
+
+      # 生成 index.json 并渲染 index.html / app.js
+      - name: Build Package Version Listing
+        run: ${{ env.pathToCi }}/build.cmd BuildRepoListing --root ${{ env.pathToCi }} --list-publish-directory $GITHUB_WORKSPACE/${{ env.listPublishDirectory }} --current-package-name sereinfish.cat.tools
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # 部署前把生成结果打出来,便于排查
+      - name: Show Generated Listing
+        run: |
+          echo "--- ${{ env.listPublishDirectory }} ---"
+          ls -la "${{ env.listPublishDirectory }}"
+          echo "--- index.json ---"
+          cat "${{ env.listPublishDirectory }}/index.json"
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload Pages Artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ${{ env.listPublishDirectory }}
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

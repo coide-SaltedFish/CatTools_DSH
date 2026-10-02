@@ -1,0 +1,14 @@
+{
+  "name": "CatTools Listing",
+  "id": "sereinfish.cat.tools.listing",
+  "author": {
+    "name": "一只大猫条",
+    "url": "",
+    "email": ""
+  },
+  "description": "CatTools 工具箱(NDMF 重写版)sereinfish.cat.tools 的 VPM 仓库列表。",
+  "bannerUrl": "banner.png",
+  "githubRepos": [
+    "coide-SaltedFish/CatTools_DSH"
+  ]
+}

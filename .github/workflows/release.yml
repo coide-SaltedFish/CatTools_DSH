@@ -1,0 +1,68 @@
+name: Build Release
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - '[0-9]+.[0-9]+.[0-9]+'
+      - '[0-9]+.[0-9]+.[0-9]+-*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: release
+    runs-on: ubuntu-latest
+    env:
+      PACKAGE_NAME: sereinfish.cat.tools
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # 版本号以 package.json 为唯一来源
+      - name: Get Version
+        id: version
+        uses: zoexx/github-action-json-file-properties@b9f36ce6ee6fe2680cd3c32b2c62e22eade7e590
+        with:
+          file_path: "package.json"
+          prop_path: "version"
+
+      # 打 tag(若由 tag 触发则已存在,此步会跳过报错)
+      - name: Create Tag
+        id: tag_version
+        uses: rickstaa/action-create-tag@88dbf7ff6fe2405f8e8f6c6fdfd78829bc631f83
+        continue-on-error: true
+        with:
+          tag: "${{ steps.version.outputs.value }}"
+
+      # 生成 VPM 发布 zip
+      # 用 git archive 而非 zip -r:仓库根目录就是包根目录,
+      # 直接递归压缩会把 .github / Website / AGENTS.md 等一并打进去,
+      # 而 .gitattributes 里的 export-ignore 正好把这些排除掉。
+      - name: Create Package Zip
+        run: |
+          git archive --format=zip -o "sereinfish.cat.tools-${{ steps.version.outputs.value }}.zip" HEAD
+
+      # 列出 .meta 供 unitypackage 打包使用
+      - name: Track Package Meta Files
+        run: find . -name \*.meta -not -path "./Website/*" -not -path "./.github/*" > metaList
+
+      # 生成 .unitypackage(方便手动导入的用户)
+      - name: Create UnityPackage
+        uses: pCYSl5EDgo/create-unitypackage@v1.2.3
+        with:
+          package-path: "sereinfish.cat.tools-${{ steps.version.outputs.value }}.unitypackage"
+          include-files: metaList
+
+      # 发布到 GitHub Releases;build-listing.yml 会在此之后重建 listing
+      - name: Make Release
+        uses: softprops/action-gh-release@de2c0eb89ae2a093876385947365aca7b0e5f844
+        with:
+          tag_name: "${{ steps.version.outputs.value }}"
+          name: "${{ steps.version.outputs.value }}"
+          generate_release_notes: true
+          files: |
+            sereinfish.cat.tools-${{ steps.version.outputs.value }}.zip
+            sereinfish.cat.tools-${{ steps.version.outputs.value }}.unitypackage
+            package.json
