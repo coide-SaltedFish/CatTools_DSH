@@ -38,18 +38,7 @@ sysinfo.txt
 Thumbs.db
 desktop.ini
 
-# DSH sandbox permission-repair reports (local only)
-.dsh-acl-recovery/
-
 # GitHub Pages 构建产物(由 build-listing.yml 生成,不入库)
 # 注意开头的斜杠:只忽略仓库根目录下的 Website/,不要误伤
 # VpmListing/Website/(那是要入库的站点模板目录)
 /Website/
-
-# 本地部署排查日志与 Actions API 临时响应
-listing-log/
-listing-run.zip
-wf-runs.json
-run-*.json
-jobs-*.json
-dispatch.json

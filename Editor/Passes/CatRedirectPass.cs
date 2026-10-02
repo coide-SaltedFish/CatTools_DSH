@@ -130,7 +130,7 @@ namespace SereinFish.CatTools.Editor.Passes
         {
             if (!reported.Add(component)) return;
 
-            // 见 AGENTS §8:本地化报错设施尚未接入,当前用 ReportException 这一临时手段
+            // 本地化报错设施尚未接入,当前用 ReportException 这一临时手段
             // (严重级别 InternalError,会阻止上传;文案里会带堆栈)。
             ErrorReport.ReportException(new InvalidOperationException(message));
         }

@@ -20,7 +20,6 @@ namespace SereinFish.CatTools.Components
     /// <item>在 <c>Editor/Inspectors/</c> 下写对应的 Editor(可继承 <c>CatToolsComponentEditor</c>);</item>
     /// <item>在 <c>Editor/Passes/</c> 下实现处理它的 Pass,并在 <c>CatToolsPlugin.Configure()</c> 中注册。</item>
     /// </list>
-    /// </remarks>
     /// <remarks>
     /// 这里实现 <see cref="INDMFEditorOnly"/>,是向 NDMF 与 VRChat SDK 声明
     /// 「这个组件只在编辑器里有意义」的标准做法。

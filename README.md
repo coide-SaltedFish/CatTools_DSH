@@ -26,7 +26,6 @@ CatTools/
 ├── README.md
 ├── CHANGELOG.md
 ├── LICENSE.md
-├── docs~/                                开发参考文档(以 ~ 结尾 → Unity 不会打进包)
 ├── Runtime/                              ── 随 Avatar 一起存在的那一半
 │   ├── SereinFish.CatTools.Runtime.asmdef
 │   ├── AssemblyInfo.cs
@@ -149,93 +148,6 @@ https://coide-SaltedFish.github.io/CatTools_DSH/index.json
   目标位置,所以会重复若干轮直到层级不再变化(轮数上限为「组件数 + 2」)。
 - **目标链会一并处理。** A 指向 B、B 又指向 C 时,把组件挂在 A 上,最终会落到 C 下。
 - **错误会阻止上传。** 路径找不到、路径含 `..`、目标落在自身子树内,都会在构建报告里报错。
-
-## 如何新增一个功能组件
-
-### 1. 写组件(声明)
-
-`Runtime/Components/MyComponent.cs`:
-
-```csharp
-using SereinFish.CatTools;
-using SereinFish.CatTools.Components;
-using UnityEngine;
-
-namespace SereinFish.CatTools.Components
-{
-    [AddComponentMenu(CatToolsConstants.ComponentMenuRoot + "示例/我的组件")]
-    public sealed class MyComponent : CatToolsComponent
-    {
-        public override string DisplayName => "我的组件";
-
-        [Tooltip("这个字段会出现在 Inspector 里")]
-        public float SomeValue = 1.0f;
-    }
-}
-```
-
-### 2. 写 Inspector(可选)
-
-`Editor/Inspectors/MyComponentEditor.cs`:
-
-```csharp
-using SereinFish.CatTools.Components;
-using SereinFish.CatTools.Editor.Inspectors;
-using UnityEditor;
-using UnityEngine;
-
-namespace SereinFish.CatTools.Editor.Inspectors
-{
-    [CustomEditor(typeof(MyComponent))]
-    internal sealed class MyComponentEditor : CatToolsComponentEditor
-    {
-        protected override void DrawComponentInspector()
-        {
-            EditorGUILayout.HelpBox("在这里解释这个组件的作用。", MessageType.Info);
-        }
-    }
-}
-```
-
-不写这个文件的话,Unity 会用默认 Inspector;框架的统一标题头也就没有了。
-
-### 3. 写处理它的 Pass(应用)
-
-`Editor/Passes/MyComponentPass.cs`:
-
-```csharp
-using nadena.dev.ndmf;
-using SereinFish.CatTools.Components;
-
-namespace SereinFish.CatTools.Editor.Passes
-{
-    internal sealed class MyComponentPass : CatToolsPass<MyComponentPass>
-    {
-        public override string QualifiedName => "sereinfish.cat.tools.my-component";
-        public override string DisplayName => "CatTools: 我的组件";
-
-        protected override void Execute(BuildContext context)
-        {
-            foreach (var component in FindComponents<MyComponent>(context))
-            {
-                // 在这里把 component 的声明应用到 Avatar 上。
-                // context.AvatarRootObject / AvatarRootTransform 是 Avatar 的根。
-            }
-        }
-    }
-}
-```
-
-### 4. 注册到管线
-
-在 `Editor/CatToolsPlugin.cs` 的 `Configure()` 里加一行:
-
-```csharp
-InPhase(BuildPhase.Transforming)
-    .Run(MyComponentPass.Instance);
-```
-
-组件不需要自己删除自己 —— `CleanupComponentsPass` 会在收尾时统一处理。
 
 ## 许可
 
