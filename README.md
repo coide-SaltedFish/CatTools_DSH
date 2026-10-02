@@ -171,7 +171,5 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 ```
 
 `package.json` 的 `license` 字段用的是 SPDX 标识 `GPL-3.0-or-later`。
-若你只想授权第 3 版本身、不含「或更新版本」,把它改成 `GPL-3.0-only` 并相应调整上面的声明。
 
 > 采用 GPL 后请注意:**本插件的使用者若再分发,也必须以 GPL 兼容条款开源**。
-> 如果你想允许别人把 CatTools 用在闭源作品里,应该改用 MIT 或 Apache-2.0。
