@@ -28,7 +28,7 @@ namespace SereinFish.CatTools.Editor.Inspectors
     {
         public override void OnInspectorGUI()
         {
-            DrawHeader();
+            DrawCatToolsHeader();
 
             EditorGUILayout.Space(4);
 
@@ -37,7 +37,12 @@ namespace SereinFish.CatTools.Editor.Inspectors
             DrawComponentInspector();
         }
 
-        private void DrawHeader()
+        /// <summary>
+        /// 绘制统一的标题头。
+        /// 注意:基类 <see cref="UnityEditor.Editor"/> 自己已经有一个 <c>DrawHeader()</c>,
+        /// 所以这里必须换个名字,否则会触发 CS0108「隐藏继承成员」警告。
+        /// </summary>
+        private void DrawCatToolsHeader()
         {
             var component = target as CatToolsComponent;
             var title = component != null ? component.DisplayName : target.GetType().Name;
